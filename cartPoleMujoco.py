@@ -63,16 +63,16 @@ class VideoRecorderCallback(BaseCallback):
 
 
 
-env = gym.make('InvertedPendulum-v4',render_mode='human')
+env = gym.make('InvertedPendulum-v4',render_mode = "rgb_array")
 
 policy_kwargs = dict(activation_fn=th.nn.ReLU,
                      net_arch=dict(pi=[128], qf=[128]))
 
 log_dir = "./td3_cartpole_mujoco/"+datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
 
-model = TD3("MlpPolicy",env,policy_kwargs=policy_kwargs, verbose=1,
+model = TD3("MlpPolicy",env,learning_rate=0.005,policy_kwargs=policy_kwargs, verbose=False,
             tensorboard_log=log_dir)
-video_recorder = VideoRecorderCallback(gym.make("InvertedPendulum-v4",render_mode='rgb_array'), render_freq=5000)
+video_recorder = VideoRecorderCallback(gym.make("InvertedPendulum-v4",render_mode='rgb_array'), render_freq=10000)
 
 
 model.learn(total_timesteps=10_000,callback=video_recorder)
