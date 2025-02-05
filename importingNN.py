@@ -14,7 +14,7 @@ path = "C:/Users/guarn/Dropbox/Alejandro/DoctoradoITESM/rlSandbox/rlSandbox/crit
 model_critic = onnx.load(path)
 critic = onnx2torch.convert(model_critic)
 
-input1 = torch.ones((1,10))
+input1 = torch.zeros((1,10))
 input2 = torch.ones((1,10))
 
 y = critic(input1,input2)

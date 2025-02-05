@@ -1,1 +1,3 @@
 *.onnx
+.td3/*
+td3_cartpole_mujoco/*
