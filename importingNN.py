@@ -3,6 +3,14 @@ import onnx2torch
 from onnx2pytorch import ConvertModel
 import onnx
 
+class newConvertModel(ConvertModel):
+    def __init__(self,*args, **kwargs):
+        super(newConvertModel, self).__init__(*args, **kwargs)
+    
+    def set_training_mode(self,mode: bool)->None:
+        self.train(mode)
+
+
 def importMatlabNN(mode='ConvertModel'):
     path = "C:/Users/guarn/Dropbox/Alejandro/DoctoradoITESM/ReinforcementLearningTD3/actorRLcart.onnx"
     model_actor = onnx.load(path)
@@ -20,4 +28,7 @@ def importMatlabNN(mode='ConvertModel'):
     return actor, critic
 
 if __name__ == "__main__":
-    importMatlabNN()
+    actor, critic = importMatlabNN(mode='ConvertModel')
+
+    
+    optimizer = torch.optim.Adam(actor.parameters())
