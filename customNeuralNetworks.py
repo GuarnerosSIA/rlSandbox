@@ -26,3 +26,6 @@ class CustomTD3Policy(TD3Policy):
 
 env = gym.make('InvertedPendulum-v4',render_mode = "rgb_array")
 model = TD3(CustomTD3Policy, env, verbose=1)
+
+
+model.learn(total_timesteps=10_000)
