@@ -34,7 +34,10 @@ class CustomNetwork(nn.Module):
 
         # Policy network
         self.policy_net = nn.Sequential(
-            nn.Linear(feature_dim,last_layer_dim_pi), nn.ReLU()
+            nn.Linear(feature_dim,128),
+            nn.ReLU(),
+            nn.Linear(128,last_layer_dim_pi),
+            nn.ReLU()
         )
         # Value network
         self.value_net = nn.Sequential(
@@ -81,4 +84,5 @@ class CustomActorCriticPolicy(ActorCriticPolicy):
 
 env = gym.make('InvertedPendulum-v4',render_mode = "human")
 model = PPO(CustomActorCriticPolicy, env, verbose=1)
-model.learn(5000)
+print(model.policy)
+model.learn(1000)
