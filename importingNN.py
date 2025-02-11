@@ -96,6 +96,7 @@ class customCritic(nn.Module):
 
         self.output = nn.Linear(128,1)
     def forward(self, in1,in2):
+        
         x1 = self.flatten(in1)
         x2 = self.flatten(in2)
         fc1 = self.fcin1(x1)

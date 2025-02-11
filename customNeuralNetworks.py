@@ -55,6 +55,24 @@ def actorWeights(model):
         model[5].bias.copy_(fc3_b_tensor)
 
 
+class customActorDummy(nn.Module):
+    def __init__(self):
+        super(customActorDummy, self).__init__()
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(5,128)
+        self.act1 = nn.ReLU()
+        self.fc2 = nn.Linear(128,128)
+        self.act2 = nn.ReLU()
+        self.fc3 = nn.Linear(128,1)
+    def forward(self, x):
+        x = self.flatten(x)
+        out1 = self.fc1(x)
+        act1 = self.act1(out1)
+        out2 = self.fc2(act1)
+        act2 = self.act2(out2)
+        logits = self.fc3(act2)
+        return logits
+
 
 class CustomActor(Actor):
     """
@@ -106,13 +124,14 @@ class CustomContinuousCritic(BaseModel):
         for idx in range(n_critics):
             # q_net = create_mlp(features_dim + action_dim, 1, net_arch, activation_fn)
             # Define critic with Dropout here
-            q_net = nn.Sequential(nn.Flatten(),
-                                nn.Linear(5,128),
-                                nn.ReLU(),
-                                nn.Linear(128,128),
-                                nn.ReLU(),
-                                nn.Linear(128,1),
-                                )
+            # q_net = nn.Sequential(nn.Flatten(),
+            #                     nn.Linear(5,128),
+            #                     nn.ReLU(),
+            #                     nn.Linear(128,128),
+            #                     nn.ReLU(),
+            #                     nn.Linear(128,1),
+            #                     )
+            q_net = customActorDummy()
             self.add_module(f"qf{idx}", q_net)
             self.q_networks.append(q_net)
 
@@ -153,3 +172,4 @@ actorWeights(model.actor.mu)
 # actorWeights(model.actor_target.mu)
 print(model.policy)
 model.learn(5_000)
+
