@@ -10,6 +10,50 @@ from stable_baselines3.common.policies import ActorCriticPolicy, BaseModel
 from stable_baselines3.td3.policies import Actor, TD3Policy
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.preprocessing import get_action_dim
+import scipy.io
+
+
+class Multiply(nn.Module):
+    def __init__(self, alpha):
+        super().__init__()
+        self.alpha =  alpha
+    
+    def forward(self, x):
+        x = th.mul(x, self.alpha)
+        return x
+
+
+def actorWeights(model):
+    data = scipy.io.loadmat("actorParams.mat")
+
+    fc1_W = data["fc_1_W"]
+    fc1_b = data["fc_1_b"]
+
+    fc2_W = data["fc_2_W"]
+    fc2_b = data["fc_2_b"]
+
+    fc3_W = data["fc_3_W"]
+    fc3_b = data["fc_3_b"]
+
+    scaleW = data["scaleW"]
+
+    fc1_W_tensor = th.from_numpy(fc1_W).float()
+    fc1_b_tensor = th.from_numpy(fc1_b[:,0]).float()
+
+    fc2_W_tensor = th.from_numpy(fc2_W).float()
+    fc2_b_tensor = th.from_numpy(fc2_b[:,0]).float()
+
+    fc3_W_tensor = th.from_numpy(fc3_W).float()
+    fc3_b_tensor = th.from_numpy(fc3_b[:,0]).float()
+
+    with th.no_grad():
+        model[1].weight.copy_(fc1_W_tensor)
+        model[1].bias.copy_(fc1_b_tensor)
+        model[3].weight.copy_(fc2_W_tensor)
+        model[3].bias.copy_(fc2_b_tensor)
+        model[5].weight.copy_(fc3_W_tensor)
+        model[5].bias.copy_(fc3_b_tensor)
+
 
 
 class CustomActor(Actor):
@@ -25,7 +69,9 @@ class CustomActor(Actor):
                                 nn.ReLU(),
                                 nn.Linear(128,128),
                                 nn.ReLU(),
-                                nn.Linear(128,1)
+                                nn.Linear(128,1),
+                                nn.Tanh(),
+                                Multiply(3)
                                 )
 
 
@@ -43,7 +89,7 @@ class CustomContinuousCritic(BaseModel):
         activation_fn: Type[nn.Module] = nn.ReLU,
         normalize_images: bool = True,
         n_critics: int = 2,
-        share_features_extractor: bool = True,
+        share_features_extractor: bool = False,
     ):
         super().__init__(
             observation_space,
@@ -66,7 +112,6 @@ class CustomContinuousCritic(BaseModel):
                                 nn.Linear(128,128),
                                 nn.ReLU(),
                                 nn.Linear(128,1),
-                                nn.Tanh()
                                 )
             self.add_module(f"qf{idx}", q_net)
             self.q_networks.append(q_net)
@@ -104,5 +149,7 @@ class CustomTD3Policy(TD3Policy):
 
 env = gym.make('InvertedPendulum-v4',render_mode = "human")
 model = TD3(CustomTD3Policy, env, verbose=1)
+actorWeights(model.actor.mu)
+# actorWeights(model.actor_target.mu)
 print(model.policy)
-model.learn(1000)
+model.learn(5_000)
