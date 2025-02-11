@@ -46,13 +46,14 @@ def actorWeights(model):
     fc3_W_tensor = th.from_numpy(fc3_W).float()
     fc3_b_tensor = th.from_numpy(fc3_b[:,0]).float()
 
-    with th.no_grad():
-        model[1].weight.copy_(fc1_W_tensor)
-        model[1].bias.copy_(fc1_b_tensor)
-        model[3].weight.copy_(fc2_W_tensor)
-        model[3].bias.copy_(fc2_b_tensor)
-        model[5].weight.copy_(fc3_W_tensor)
-        model[5].bias.copy_(fc3_b_tensor)
+
+    
+    model[1].weight = th.nn.parameter.Parameter(fc1_W_tensor)
+    model[1].bias = th.nn.parameter.Parameter(fc1_b_tensor)
+    model[3].weight = th.nn.parameter.Parameter(fc2_W_tensor)
+    model[3].bias = th.nn.parameter.Parameter(fc2_b_tensor)
+    model[5].weight = th.nn.parameter.Parameter(fc3_W_tensor)
+    model[5].bias = th.nn.parameter.Parameter(fc3_b_tensor)
 
 
 class customActorDummy(nn.Module):
@@ -88,8 +89,7 @@ class CustomActor(Actor):
                                 nn.Linear(128,128),
                                 nn.ReLU(),
                                 nn.Linear(128,1),
-                                nn.Tanh(),
-                                Multiply(3)
+                                nn.Tanh()
                                 )
 
 
@@ -107,7 +107,7 @@ class CustomContinuousCritic(BaseModel):
         activation_fn: Type[nn.Module] = nn.ReLU,
         normalize_images: bool = True,
         n_critics: int = 2,
-        share_features_extractor: bool = False,
+        share_features_extractor: bool = True,
     ):
         super().__init__(
             observation_space,
@@ -168,8 +168,8 @@ class CustomTD3Policy(TD3Policy):
 
 env = gym.make('InvertedPendulum-v4',render_mode = "human")
 model = TD3(CustomTD3Policy, env, verbose=1)
-actorWeights(model.actor.mu)
+# actorWeights(model.actor.mu)
 # actorWeights(model.actor_target.mu)
 print(model.policy)
 model.learn(5_000)
-
+print(model.policy)
