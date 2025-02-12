@@ -51,21 +51,23 @@ class customActor(nn.Module):
         fc3_b = data["fc_3_b"]
 
         fc1_W_tensor = torch.from_numpy(fc1_W).float()
+        print(fc1_W_tensor[0])
         fc1_b_tensor = torch.from_numpy(fc1_b[:,0]).float()
-
+        print(fc1_b_tensor[0])
         fc2_W_tensor = torch.from_numpy(fc2_W).float()
         fc2_b_tensor = torch.from_numpy(fc2_b[:,0]).float()
 
         fc3_W_tensor = torch.from_numpy(fc3_W).float()
         fc3_b_tensor = torch.from_numpy(fc3_b[:,0]).float()
 
-        self.fc1.weight = torch.nn.parameter.Parameter(fc1_W_tensor)
-        self.fc2.bias = torch.nn.parameter.Parameter(fc1_b_tensor)  
+        self.fc1.weight = torch.nn.Parameter(fc1_W_tensor)
+        self.fc1.bias = torch.nn.Parameter(fc1_b_tensor)
+        
+        self.fc2.weight = torch.nn.Parameter(fc2_W_tensor)
+        self.fc2.bias = torch.nn.Parameter(fc2_b_tensor)
 
-        self.fc2.weight = torch.nn.parameter.Parameter(fc2_W_tensor)
-        self.fc2.bias = torch.nn.parameter.Parameter(fc2_b_tensor)
-        self.fc3.weight = torch.nn.parameter.Parameter(fc3_W_tensor)
-        self.fc3.bias = torch.nn.parameter.Parameter(fc3_b_tensor)
+        self.fc3.weight = torch.nn.Parameter(fc3_W_tensor)
+        self.fc3.bias = torch.nn.Parameter(fc3_b_tensor)
     
     
 
@@ -75,6 +77,9 @@ X = torch.ones(1,4)
 logits = model(X)
 print(logits)
 
+X = torch.zeros(1,4)
+logits = model(X)
+print(logits)
 ############################################
 ############################################
 ############################################

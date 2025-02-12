@@ -13,47 +13,6 @@ from stable_baselines3.common.preprocessing import get_action_dim
 import scipy.io
 
 
-class Multiply(nn.Module):
-    def __init__(self, alpha):
-        super().__init__()
-        self.alpha =  alpha
-    
-    def forward(self, x):
-        x = th.mul(x, self.alpha)
-        return x
-
-
-def actorWeights(model):
-    data = scipy.io.loadmat("actorParams.mat")
-
-    fc1_W = data["fc_1_W"]
-    fc1_b = data["fc_1_b"]
-
-    fc2_W = data["fc_2_W"]
-    fc2_b = data["fc_2_b"]
-
-    fc3_W = data["fc_3_W"]
-    fc3_b = data["fc_3_b"]
-
-    scaleW = data["scaleW"]
-
-    fc1_W_tensor = th.from_numpy(fc1_W).float()
-    fc1_b_tensor = th.from_numpy(fc1_b[:,0]).float()
-
-    fc2_W_tensor = th.from_numpy(fc2_W).float()
-    fc2_b_tensor = th.from_numpy(fc2_b[:,0]).float()
-
-    fc3_W_tensor = th.from_numpy(fc3_W).float()
-    fc3_b_tensor = th.from_numpy(fc3_b[:,0]).float()
-
-
-    
-    model[1].weight = th.nn.parameter.Parameter(fc1_W_tensor)
-    model[1].bias = th.nn.parameter.Parameter(fc1_b_tensor)
-    model[3].weight = th.nn.parameter.Parameter(fc2_W_tensor)
-    model[3].bias = th.nn.parameter.Parameter(fc2_b_tensor)
-    model[5].weight = th.nn.parameter.Parameter(fc3_W_tensor)
-    model[5].bias = th.nn.parameter.Parameter(fc3_b_tensor)
 
 
 class customActorDummy(nn.Module):
@@ -83,14 +42,56 @@ class CustomActor(Actor):
         super(CustomActor, self).__init__(*args, **kwargs)
         # Define custom network with Dropout
         # WARNING: it must end with a tanh activation to squash the output
-        self.mu = nn.Sequential(nn.Flatten(),
-                                nn.Linear(4,128),
-                                nn.ReLU(),
-                                nn.Linear(128,128),
-                                nn.ReLU(),
-                                nn.Linear(128,1),
-                                nn.Tanh()
-                                )
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(4,128)
+        self.act1 = nn.ReLU()
+        self.fc2 = nn.Linear(128,128)
+        self.act2 = nn.ReLU()
+        self.fc3 = nn.Linear(128,1)
+        self.output = nn.Tanh()
+
+        self.actorWeights()
+    def forward(self, obs: th.Tensor) -> th.Tensor:
+        features = self.extract_features(obs, self.features_extractor)
+        out1 = self.fc1(features)
+        act1 = self.act1(out1)
+        out2 = self.fc2(act1)
+        act2 = self.act2(out2)
+        out3 = self.fc3(act2)
+        logits = self.output(out3)
+        return logits
+    
+    def actorWeights(self):
+        data = scipy.io.loadmat("actorParams.mat")
+
+        fc1_W = data["fc_1_W"]
+        fc1_b = data["fc_1_b"]
+
+        fc2_W = data["fc_2_W"]
+        fc2_b = data["fc_2_b"]
+
+        fc3_W = data["fc_3_W"]
+        fc3_b = data["fc_3_b"]
+
+        fc1_W_tensor = th.from_numpy(fc1_W).float()
+        print(fc1_W_tensor[0])
+        fc1_b_tensor = th.from_numpy(fc1_b[:,0]).float()
+        print(fc1_b_tensor[0])
+        fc2_W_tensor = th.from_numpy(fc2_W).float()
+        fc2_b_tensor = th.from_numpy(fc2_b[:,0]).float()
+
+        fc3_W_tensor = th.from_numpy(fc3_W).float()
+        fc3_b_tensor = th.from_numpy(fc3_b[:,0]).float()
+
+        self.fc1.weight = th.nn.Parameter(fc1_W_tensor)
+        self.fc1.bias = th.nn.Parameter(fc1_b_tensor)
+        
+        self.fc2.weight = th.nn.Parameter(fc2_W_tensor)
+        self.fc2.bias = th.nn.Parameter(fc2_b_tensor)
+
+        self.fc3.weight = th.nn.Parameter(fc3_W_tensor)
+        self.fc3.bias = th.nn.Parameter(fc3_b_tensor)
+   
 
 
 class CustomContinuousCritic(BaseModel):
