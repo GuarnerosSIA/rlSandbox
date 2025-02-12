@@ -74,9 +74,8 @@ class CustomActor(Actor):
         fc3_b = data["fc_3_b"]
 
         fc1_W_tensor = th.from_numpy(fc1_W).float()
-        print(fc1_W_tensor[0])
         fc1_b_tensor = th.from_numpy(fc1_b[:,0]).float()
-        print(fc1_b_tensor[0])
+        
         fc2_W_tensor = th.from_numpy(fc2_W).float()
         fc2_b_tensor = th.from_numpy(fc2_b[:,0]).float()
 
