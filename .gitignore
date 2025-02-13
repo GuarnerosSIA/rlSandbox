@@ -2,3 +2,5 @@
 .td3/*
 td3_cartpole_mujoco/*
 *.mat
+td3_cartpole_transfer/*
+td3CartBatch512Critic0_01/*

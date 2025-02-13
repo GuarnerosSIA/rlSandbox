@@ -11,27 +11,7 @@ from stable_baselines3.td3.policies import Actor, TD3Policy
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.preprocessing import get_action_dim
 import scipy.io
-
-
-
-
-class customActorDummy(nn.Module):
-    def __init__(self):
-        super(customActorDummy, self).__init__()
-        self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(5,128)
-        self.act1 = nn.ReLU()
-        self.fc2 = nn.Linear(128,128)
-        self.act2 = nn.ReLU()
-        self.fc3 = nn.Linear(128,1)
-    def forward(self, x):
-        x = self.flatten(x)
-        out1 = self.fc1(x)
-        act1 = self.act1(out1)
-        out2 = self.fc2(act1)
-        act2 = self.act2(out2)
-        logits = self.fc3(act2)
-        return logits
+import datetime
 
 
 class CustomActor(Actor):
@@ -116,7 +96,7 @@ class customCritic(nn.Module):
         fcBody = self.fcBody(reluBody)
         bodyOutput = self.fcBodyOutput(fcBody)
         logits = self.output(bodyOutput)
-        return logits
+        return logits*0.01
 
     def loadMyWeights(self,path):
         data = scipy.io.loadmat(path)
@@ -233,9 +213,9 @@ class CustomTD3Policy(TD3Policy):
 
 
 env = gym.make('InvertedPendulum-v4',render_mode = "human")
-model = TD3(CustomTD3Policy, env, verbose=1,learning_rate=0.01)
-# actorWeights(model.actor.mu)
-# actorWeights(model.actor_target.mu)
-print(model.policy)
-model.learn(5_000)
-print(model.policy)
+log_dir = "./td3CartBatch512Critic0_01/"+datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+
+model = TD3(CustomTD3Policy, env, verbose=1,learning_rate=0.005,
+            tensorboard_log=log_dir, batch_size=256)
+
+model.learn(10_000)

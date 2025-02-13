@@ -14,15 +14,15 @@ from stable_baselines3.common.logger import Video
 env = gym.make('InvertedPendulum-v4',render_mode = "human")
 
 policy_kwargs = dict(activation_fn=th.nn.ReLU,
-                     net_arch=dict(pi=[128], qf=[128]))
+                     net_arch=dict(pi=[512], qf=[1024]))
 
 log_dir = "./td3_cartpole_mujoco/"+datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
 
-model = TD3("MlpPolicy",env,learning_rate=0.005,policy_kwargs=policy_kwargs, verbose=False,
+model = TD3("MlpPolicy",env,learning_rate=0.005,policy_kwargs=policy_kwargs, verbose=True,
             tensorboard_log=log_dir)
 
 
-model.learn(total_timesteps=1_000)
+model.learn(total_timesteps=10_000)
 
 vec_env = model.get_env()
 obs = vec_env.reset()
