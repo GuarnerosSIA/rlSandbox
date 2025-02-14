@@ -5,6 +5,7 @@ import numpy as np
 import gymnasium as gym
 from stable_baselines3 import TD3
 from stable_baselines3.common.env_checker import check_env
+import datetime
 
 time.sleep(1)
 
@@ -37,8 +38,8 @@ class PioneerEnv(gym.Env):
 
     def step(self, action):
         rl, ll = action
-        self.sim.setJointTargetVelocity(self.rightmotor, float(rl*2))
-        self.sim.setJointTargetVelocity(self.leftMotor, float(ll*2))
+        self.sim.setJointTargetVelocity(self.rightmotor, float(rl*4))
+        self.sim.setJointTargetVelocity(self.leftMotor, float(ll*4))
         self.sim.step()
         obs = self._get_obs()
         reward = float(self._compute_reward(obs))
@@ -86,8 +87,11 @@ yd = 1
 env = PioneerEnv()
 check_env(env)
 
+log_dir = "./TD3Coppelia/"+datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+
+
 model = TD3("MlpPolicy", env, verbose=1,learning_rate=0.001,
-            batch_size=256)
+            batch_size=256,tensorboard_log=log_dir)
 dtime = time.time()
 model.learn(total_timesteps=50_000)
 

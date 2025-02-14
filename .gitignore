@@ -5,3 +5,4 @@ td3_cartpole_mujoco/*
 td3_cartpole_transfer/*
 td3CartBatch512Critic0_01/*
 *.ttt
+TD3Coppelia/*
