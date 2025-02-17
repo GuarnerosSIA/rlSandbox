@@ -8,7 +8,7 @@ time.sleep(5)
 
 V = []
 VK = []
-g = 9.8
+g = 9.81
 l = 0.5
 theta0 = 90*(np.random.rand()-0.5)
 
@@ -34,7 +34,7 @@ while (t := sim.getSimulationTime()) < 10:
     dotGamma = sim.getJointVelocity(rightmotor)
     # ddotGamma = -g/l*np.rad2deg(np.sin(gamma))
     Vf = 0.005*dotGamma**2 + 0.005*gamma**2
-    VfK = (g/l)*(1-np.cos(np.deg2rad(gamma)))+0.5*dotGamma**2
+    VfK = (g/l)*(1-np.cos(np.deg2rad(gamma)))+0.57*(dotGamma**2)
     print(dotGamma)
     V.append(Vf)
     VK.append(VfK)
