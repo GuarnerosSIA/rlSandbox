@@ -96,10 +96,18 @@ log_dir = "./TD3Coppelia/"+datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
 
 action_noise = NormalActionNoise(mean=np.zeros(2), sigma=0.1 * np.ones(2))
 
-
-model = TD3("MlpPolicy", env, verbose=1,learning_rate=0.0001,
+try:
+    model = TD3.load("TD3CartCoppelia.zip",env=env, verbose=1,
+            learning_rate=0.000075,batch_size=128,
+            tensorboard_log=log_dir, gamma=0.97,
+            action_noise=action_noise)
+    print("Model loaded")
+except:
+    print("Unable to load TD3CartCoppelia.zip, creating new model")
+    model = TD3("MlpPolicy", env, verbose=1,learning_rate=0.0001,
             batch_size=128,tensorboard_log=log_dir, gamma=0.97,
             action_noise=action_noise)
+
 dtime = time.time()
 model.learn(total_timesteps=25_000)
 
@@ -111,5 +119,5 @@ for i in range(500):
         obs,info = env.reset(0)
 
 env.close()
-
+model.save("TD3CartCoppelia")
 print((dtime-time.time())/60)
