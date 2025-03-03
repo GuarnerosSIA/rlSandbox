@@ -20,9 +20,17 @@ class PioneerEnv(gym.Env):
         self.leftMotor = self.sim.getObject('./PioneerP3DX/leftMotor')
         self.robot = self.sim.getObject('./PioneerP3DX')
         self.target = self.sim.getObject('./Target')
+        #
+        self.control = 0
+        self.errorDist = 0
+        self.errorAngle = 0
+        self.stdControl = 0
+        #
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float32)
         self.sim.startSimulation()
+        self.l = 0.15
+        self.r = 0.1
         self.xd = (np.random.rand() - 0.5)*2
         self.yd = (np.random.rand() - 0.5)*2
         self.reset(0)
@@ -40,42 +48,62 @@ class PioneerEnv(gym.Env):
         return self._get_obs(), {"A":0}
 
     def step(self, action):
-        rl, ll = action
-        self.sim.setJointTargetVelocity(self.rightmotor, float((rl+1)*2))
-        self.sim.setJointTargetVelocity(self.leftMotor, float((ll+1)*2))
-        self.sim.step()
+        kTheta, kDistance = action
+        rightmotor = self.sim.getObject('/PioneerP3DX/rightMotor')
+        leftMotor = self.sim.getObject('./PioneerP3DX/leftMotor')
+        robot = self.sim.getObject('./PioneerP3DX')
+    
+        self.sim.setObjectPosition( robot,(0.5,-0.5,0.5),-1)
+        (x,y,x) = self.sim.getObjectPosition(robot,-1)
+
+        while (t := self.sim.getSimulationTime()) < 20:
+            # print(f'Simulation time: {t:.2f} [s]')
+            (x,y,z) = self.sim.getObjectPosition(robot,-1)
+            (dummy,beta,theta) = self.sim.getObjectOrientation(robot,-1)
+            dx = xd-x
+            dy = yd-y
+            distance =math.sqrt(dx*dx + dy*dy)
+            (x,y,z) = self.sim.getObjectPosition(robot,-1)
+            angle = -math.degrees(theta)+math.degrees(math.atan2(dy,dx))
+            vel = distance*kDistance
+            angVel = angle*kTheta
+            print(vel,angVel)
+            if distance > 0.1:
+                rl = (2*vel+angVel*self.l)/(2*self.r)
+                ll = (2*vel-angVel*self.l)/(2*self.r)
+            else:
+                rl = 0
+                ll = 0    
+            self.sim.setJointTargetVelocity(rightmotor,rl)
+            self.sim.setJointTargetVelocity(leftMotor,ll)
+            self.sim.step()
+        self.sim.stopSimulation()
+
         obs = self._get_obs()
         reward = float(self._compute_reward(obs))
         done = self._is_done(obs)
         truncated = self.isTruncated(obs)
+        
+        
         return obs, reward, done,truncated, {}
     def isTruncated(self,obs):
         if obs[2] > 10:
             return True
-        elif self.sim.getSimulationTime()>20:
-            return True
         else:
             return False
     def _get_obs(self):
-        x, y, z = self.sim.getObjectPosition(self.robot, -1)
-        self.z = abs(z)
-        _, beta, theta = self.sim.getObjectOrientation(self.robot, -1)
-        dx = self.xd - x
-        dy = self.yd - y
-        distance = math.sqrt(dx * dx + dy * dy)
-        angle = -math.degrees(theta) + math.degrees(math.atan2(dy, dx))
-        return np.array([dx, dy, distance, angle], dtype=np.float32)
+        control = self.control
+        errorDist = self.errorDist
+        errorAngle = self.errorAngle
+        stdControl = self.stdControl
+        return np.array([control, errorDist, 
+                         errorAngle, stdControl], dtype=np.float32)
 
     def _compute_reward(self, obs):
-        d = obs[2]
-        angle = obs[3]
-        distance = -d*0.7
-        angle = -abs(angle)/180
-        fall = -self.z
-        # print(f'Distance:{distance} Z:{fall} Angle:{angle}')
-        if d < 0.2:
-            return 1
-        return 0.01*(distance + fall + angle)
+        dist = -obs[1]
+        angle = -obs[2]
+        std = -obs[3]
+        return 0.01*(dist + std + angle)
 
     def _is_done(self, obs):
         distance = obs[2]
